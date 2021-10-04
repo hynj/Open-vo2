@@ -5,7 +5,9 @@ import App from './App.vue'
 import './index.css'
 import index from '/src/components/Index.vue'
 import BluetoothSelect from '/src/components/BluetoothSelect.vue'
+import Sensors from '/src/components/Sensors.vue'
 const { ipcRenderer } = require('electron')
+import VueApexCharts from "vue3-apexcharts";
 
 ipcRenderer.on("channelForBluetoothDeviceList", (event, list) => {
   console.log("renderer recived device");
@@ -22,6 +24,11 @@ const routes = [
       path: '/BluetoothSelect',
       name: 'BluetoothSelect',
       component: BluetoothSelect
+  },
+  {
+      path: '/Sensors',
+      name: 'Sensors',
+      component: Sensors
   }
 ]
 
@@ -35,6 +42,6 @@ const app = createApp(App)
 
 app.use(store)
 app.use(router)
-
+app.use(VueApexCharts)
 
 app.mount('#app')
