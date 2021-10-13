@@ -35,8 +35,12 @@ const state = {
       FlowTotal: []
     },
     Sensor: {
-      Oxygen: [10,20],
-      CO2: []
+      Oxygen: [20],
+      CO2: [],
+      Humidity: [],
+      Temperature: [],
+      Pressure: [],
+      Time: []
     },
     Graph: {
       series: [
@@ -54,6 +58,14 @@ const mutations = {
     state.Graph.series[0].data.push(characteristic);
   },
   NEW_SENSOR_DATA(state, newData) {
+    state.Sensor.Oxygen.push(newData[0])
+    state.Sensor.CO2.push(newData[1])
+    state.Sensor.Pressure.push(newData[2])
+    state.Sensor.Humidity.push(newData[3])
+    state.Sensor.Temperature.push(newData[4])
+    state.Sensor.Time.push(Date.now())
+
+    state.Flow.Instant.push(newData[5])
     console.log("placeholder")
   }
 };
@@ -61,17 +73,36 @@ const actions = {
   async updateOx({ commit }, characteristic) {
     commit("UPDATE_OXYGEN", characteristic);
   },
-  async addSensorData({ comit }, characteristic) {
-    let newData = characteristic
-    comit("NEW_SENSOR_DATA", newData)
+  async addSensorData({ commit }, characteristic) {
+    let o2Float = Buffer.from([ characteristic[3], characteristic[2], characteristic[1], characteristic[0] ]).readFloatBE(0)
+    let co2Float = Buffer.from([ characteristic[7], characteristic[6], characteristic[5], characteristic[4] ]).readFloatBE(0)
+    let pressureInt16 = Buffer.from([ characteristic[8], characteristic[9]]).readInt16BE(0)
+    let tempInt = characteristic[10]
+    let humInt = characteristic[11]
+    let flowOne = Buffer.from([ characteristic[15], characteristic[14], characteristic[13], characteristic[12] ]).readFloatBE(0)
+    let flowTwo = Buffer.from([ characteristic[19], characteristic[18], characteristic[17], characteristic[16] ]).readFloatBE(0)
+
+    commit("NEW_SENSOR_DATA", [o2Float, co2Float, pressureInt16, tempInt, humInt, flowOne, flowTwo])
   }
 };
 const getters = {
   oxData: state => {
-    return state.Sensor.Oxygen
+    return state.Sensor.Oxygen[state.Sensor.Oxygen.length - 1]
   },
   oxGraph: state => {
     return state.Graph.series
+  },
+  co2Data: state => {
+    return state.Sensor.CO2[state.Sensor.CO2.length - 1]
+  },
+  HumidityData: state => {
+    return state.Sensor.Humidity[state.Sensor.Humidity.length - 1]
+  },
+  pressureData: state => {
+    return state.Sensor.Pressure[state.Sensor.Pressure.length - 1]
+  },
+  temperatureData: state => {
+    return state.Sensor.Temperature[state.Sensor.Temperature.length - 1]
   }
 };
 

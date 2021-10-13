@@ -41,9 +41,14 @@ export default {
   },
   computed: {
     ...mapGetters(["oxData"]),
-    ...mapGetters(["oxGraph"])
+    ...mapGetters(["oxGraph"]),
+    ...mapGetters(["co2Data"]),
+    ...mapGetters(["HumidityData"]),
+    ...mapGetters(["pressureData"]),
+    ...mapGetters(["temperatureData"]),
   },
 }
+
 
 </script>
 
@@ -58,6 +63,10 @@ export default {
  <button  class="px-4 py-2 w-32 font-medium tracking-wide text-white capitalize transition-colors duration-200 transform bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-80" v-on:click="updateChart"></button>
         
 </div>
- {{oxData}}
+ {{oxData.toFixed(1)}}
+ {{co2Data}}
+ {{HumidityData}}
+ {{pressureData}}
+ {{temperatureData}}
 
 </template>

@@ -234,17 +234,17 @@ const actions = {
               //console.log(event.target.value);
               if (event.target.uuid == "6e400003-b5a3-f393-e0a9-e50e24dcca9e")
               {
-                console.log("NRF");
+                //console.log("NRF");
               }
               else{
-                console.log("VO2");
+                //console.log("VO2");
     
               }
-              console.log(returnVar);
+              //console.log(returnVar);
               //console.log("bob");
-              let x = Buffer.from([ returnVar[3], returnVar[2], returnVar[1], returnVar[0] ]).readFloatBE(0)
+              //let x = Buffer.from([ returnVar[3], returnVar[2], returnVar[1], returnVar[0] ]).readFloatBE(0)
 
-              dispatch("updateOx", x);
+              dispatch("addSensorData", returnVar);
               dispatch("updateCharacteristic", characteristicToConfigure);
             }
           );
