@@ -242,7 +242,7 @@ const actions = {
               }
               console.log(returnVar);
               //console.log("bob");
-              let x = Buffer.from([ returnVar[0], returnVar[1], returnVar[2], returnVar[3] ]).readFloatBE(0)
+              let x = Buffer.from([ returnVar[3], returnVar[2], returnVar[1], returnVar[0] ]).readFloatBE(0)
 
               dispatch("updateOx", x);
               dispatch("updateCharacteristic", characteristicToConfigure);
