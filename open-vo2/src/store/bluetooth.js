@@ -41,7 +41,7 @@ const mutations = {
         if (characteristicIndex < 0) {
           state.characteristics.push(characteristic);
         } else {
-          console.log(characteristic);
+          //console.log(characteristic);
           state.characteristics.splice(characteristicIndex, 1, characteristic);
         }
       },  
@@ -232,6 +232,23 @@ const actions = {
               }
               //console.log(event);
               //console.log(event.target.value);
+
+              switch (event.target.uuid){
+                  case "6e400003-b5a3-f393-e0a9-e50e24dcca9e":
+                  //NRF TX service
+                  console.log("NRF transfer");
+                  break;
+
+                  case "beb5483e-36e1-4688-b7f5-ea07361b26a8":
+                  //VO2 Oxygen / CO2 / Flow characteristic
+                  dispatch("addSensorData", returnVar);
+                  break;
+
+                  case "02738e9d-282b-4ba3-b951-46b14c37ab4b":
+                  //Temp / Pressure /Humidity
+                  dispatch("addTempData", returnVar);
+                  break;
+              }
               if (event.target.uuid == "6e400003-b5a3-f393-e0a9-e50e24dcca9e")
               {
                 //console.log("NRF");
@@ -244,7 +261,6 @@ const actions = {
               //console.log("bob");
               //let x = Buffer.from([ returnVar[3], returnVar[2], returnVar[1], returnVar[0] ]).readFloatBE(0)
 
-              dispatch("addSensorData", returnVar);
               dispatch("updateCharacteristic", characteristicToConfigure);
             }
           );

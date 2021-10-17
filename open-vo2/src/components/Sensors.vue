@@ -12,12 +12,120 @@ export default {
       selectedDevice: "",
       txService: "",
       txChar: "",
+      optionsOne: {
+        chart: {
+          id: 'vuechart-example',
+          toolbar: {
+              show: false
+            },
+            animations: {
+ enabled: TextTrackCue,
+        easing: 'linear',
+        speed: 1,
+        animateGradually: {
+            enabled: true,
+            delay: 150
+        },
+        dynamicAnimation: {
+            enabled: false,
+            speed: 350
+        }
+}
+        },
+        stroke: {
+    show: true,
+    curve: 'smooth',
+    lineCap: 'butt',
+    colors: undefined,
+    width: 1,
+    dashArray: 0,      
+},
+
+
+        xaxis: {
+          labels: {
+            show: false,
+            showAlways: false
+          },
+          axisTicks: {
+            show: false,
+            borderType: 'solid',
+            color: '#78909C',
+            width: 6,
+            offsetX: 0,
+            offsetY: 0
+          },
+          axisBorder: {
+          show: false,
+          color: '#78909C',
+          offsetX: 0,
+          offsetY: 0
+      },
+        },
+        yaxis: {
+          min: 15,
+          max: 22,
+          labels: {
+            formatter: (value) => { return value.toFixed(0) }
+          }
+        }
+      },
       options: {
         chart: {
-          id: 'vuechart-example'
+          id: 'vuechart-example',
+          toolbar: {
+              show: false
+            },
+            animations: {
+ enabled: TextTrackCue,
+        easing: 'linear',
+        speed: 1,
+        animateGradually: {
+            enabled: true,
+            delay: 150
         },
+        dynamicAnimation: {
+            enabled: false,
+            speed: 350
+        }
+}
+        },
+        stroke: {
+    show: true,
+    curve: 'smooth',
+    lineCap: 'butt',
+    colors: undefined,
+    width: 1,
+    dashArray: 0,      
+},
+
+
         xaxis: {
-          categories: [1991, 1992]
+          labels: {
+            show: false,
+            showAlways: false
+          },
+          axisTicks: {
+            show: false,
+            borderType: 'solid',
+            color: '#78909C',
+            width: 6,
+            offsetX: 0,
+            offsetY: 0
+          },
+          axisBorder: {
+          show: false,
+          color: '#78909C',
+          offsetX: 0,
+          offsetY: 0
+      },
+        },
+        yaxis: {
+          min: 15,
+          max: 22,
+          labels: {
+            formatter: (value) => { return value.toFixed(0) }
+          }
         }
       },
       series: [{
@@ -42,10 +150,15 @@ export default {
   computed: {
     ...mapGetters(["oxData"]),
     ...mapGetters(["oxGraph"]),
+    ...mapGetters(["co2Graph"]),
     ...mapGetters(["co2Data"]),
     ...mapGetters(["HumidityData"]),
     ...mapGetters(["pressureData"]),
     ...mapGetters(["temperatureData"]),
+    ...mapGetters(["vo2Data"]),
+    ...mapGetters(["vco2Data"]),
+    ...mapGetters(["rerData"]),
+    ...mapGetters(["flowFifteen"])
   },
 }
 
@@ -54,19 +167,65 @@ export default {
 
 <template>
 <div class="flex flex-col px-5 py-5 space-y-5">
+  
+
+  
     <h2 class="text-3xl font-semibold text-gray-800 dark:text-white">
         Sensor Display
          </h2>
          <p></p>
-         
-         <apexchart width="500" type="line" :options="options" :series="oxGraph"></apexchart>
+  
+<div class="flex flex-row">
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>O2:</b> {{oxData.toFixed(1)}}
+</div>
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>CO2: </b>{{co2Data}}
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>Humidity:</b> {{HumidityData}}
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+ <b> Pressure:</b> {{pressureData}}
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+ <b> Temp:</b>  {{temperatureData}}  
+</div>
+</div>
+
+<div class="flex flex-row">
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>VO2:</b> {{vo2Data.toFixed(1)}}
+</div>
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>VCO2: </b>{{vco2Data.toFixed(1)}}
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>RER:</b> {{rerData.toFixed(1)}}
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+ <b> Flow 15: </b>{{flowFifteen.toFixed(2)}} 
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+ <b> X:</b>   
+</div>
+</div>
+ 
+
+ 
+     
+         <apexchart width="300" type="line" :options="options" :series="oxGraph"></apexchart>
+         <apexchart width="300" type="line" :options="optionsOne" :series="co2Graph"></apexchart>
  <button  class="px-4 py-2 w-32 font-medium tracking-wide text-white capitalize transition-colors duration-200 transform bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-80" v-on:click="updateChart"></button>
         
-</div>
- {{oxData.toFixed(1)}}
- {{co2Data}}
- {{HumidityData}}
- {{pressureData}}
- {{temperatureData}}
 
+</div>
 </template>
