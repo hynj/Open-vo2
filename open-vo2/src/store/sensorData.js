@@ -36,6 +36,9 @@ const state = {
       Flow300: [],
       Flow15: 0,
     },
+    HeartRate:{
+      value: 0
+    },
     Calculated: {
       VO2: 0,
       VCO2: 0,
@@ -79,6 +82,9 @@ const mutations = {
   UPDATE_OXYGEN(state, characteristic) {
     //console.log(characteristic)
     state.o2Graph.series[0].data.push(characteristic);
+  },
+  NEW_HEART_RATE(state, value){
+    state.HeartRate.value = value;
   },
   NEW_TEMP_DATA(state, newData){
     state.Sensor.Pressure.push(newData[0])
@@ -196,6 +202,9 @@ const actions = {
     let humInt = characteristic[3]
 
     commit("NEW_TEMP_DATA", [pressureInt16, tempInt, humInt])
+  },
+  async addHeartRate({commit}, value){
+    commit("NEW_HEART_RATE", value);
   }
 };
 const getters = {
@@ -231,7 +240,10 @@ const getters = {
   },
   flowFifteen: state => {
     return state.Flow.Flow15
-  }
+  },
+  getHeartRate: state => {
+    return state.HeartRate.value
+  },
 };
 
 export default {

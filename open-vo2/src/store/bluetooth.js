@@ -2,6 +2,8 @@
 //var NUS_TX_CHARACTERISTIC_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 //var NUS_RX_CHARACTERISTIC_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
+//vo2 sensor primary service "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
+
 //Modified from https://github.com/MonsieurDahlstrom/web-bluetooth-vuex
 
 const state = {
@@ -9,7 +11,10 @@ const state = {
     devID: [],
     services: [],
     characteristics: [],
-    deviceList: []
+    deviceList: [],
+    vo2UUID: "",
+    vo2Connected: 0,
+    hrConnected: 0
 };
 
 const mutations = {
@@ -24,6 +29,21 @@ const mutations = {
             state.devices[storedDeviceIndex] = device;
           //Vue.set(state.devices, storedDeviceIndex, device);
         }
+      },
+      BLE_VO2_ADD(state, uuid) {
+        state.vo2UUID = uuid;
+        state.vo2Connected = 1;
+        console.log("vo2 Sensors connected");
+        console.log(state.vo2UUID);
+      },
+      BLE_HR_ADD(state){
+        state.hrConnected = 1; 
+        console.log("heart Rate Connected");
+      },
+      BLE_VO2_REMOVE(state) {
+        state.vo2UUID = "";
+        state.vo2Connected = 0;
+        console.log("VO2 Sensor disconnected");
       },
       BLE_SERVICE_ADDED(state, service) {
         var serviceIndex = state.services.indexOf(service);
@@ -86,12 +106,59 @@ const mutations = {
         }
         // remove services
         for (const serviceToDelete of services) {
+          if (serviceToDelete.uuid == "4fafc201-1fb5-459e-8fcc-c5c9c331914b")
+          {
+            state.vo2UUID = "";
+            state.vo2Connected = 0;
+          }
+          if (serviceToDelete.uuid == "0000180d-0000-1000-8000-00805f9b34fb")
+          {
+            state.hrConnected = 0;
+            console.log("HR Disconnected")
+          }
           const serviceIndex = state.services.indexOf(serviceToDelete);
           state.services.splice(serviceIndex, 1);
         }
         const storedDeviceIndex = state.devices.indexOf(device);
         state.devices[storedDeviceIndex] = device;
         //Vue.set(state.devices, storedDeviceIndex, device);
+      },
+      RESET_DEVLIST(state){
+          while(state.deviceList.length > 0) {
+            state.deviceList.pop();
+        }
+      },
+      BLE_DEVICE_REMOVED (state, device) {
+        // determine if vuex has cached device, otherwise return
+        const storedDevice = state.devices.find(storedDevice => storedDevice.id === device.id)
+        const storedDeviceIndex = state.devices.indexOf(storedDevice)
+        if(storedDeviceIndex < 0)return
+        // find vuex cached services for the device
+        const services = state.services.filter(service => service.device.id === device.id)
+        // find characteristics for vuex
+        const characteristics = state.characteristics.filter(characteristic => services.includes(characteristic.service))
+        // remove characteristics
+        for(const characterToDelete of characteristics) {
+          const characteristicIndex = state.characteristics.indexOf(characterToDelete)
+          state.characteristics.splice(characteristicIndex,1)
+        }
+        // remove services
+        for (const serviceToDelete of services) {
+          if (serviceToDelete.uuid == "4fafc201-1fb5-459e-8fcc-c5c9c331914b")
+          {
+            state.vo2UUID = "";
+            state.vo2Connected = 0;
+          }
+          if (serviceToDelete.uuid == "0000180d-0000-1000-8000-00805f9b34fb")
+          {
+            state.hrConnected = 0;
+            console.log("HR Disconnected")
+          }
+          const serviceIndex = state.services.indexOf(serviceToDelete);
+          state.services.splice(serviceIndex, 1);
+        }
+        // remove device
+        state.devices.splice(storedDeviceIndex, 1)
       },
     addToDeviceList(state, devList) {
         console.log(Array.isArray(devList));
@@ -122,6 +189,19 @@ const mutations = {
       },
 };
 const actions = {
+    resetDeviceList(state){
+      state.commit("RESET_DEVLIST");
+    },
+    async removeDevice (state, query) {
+      if (query.device.gatt.connected) {
+        query.device.removeEventListener('gattserverdisconnected', query.device.GattDisconnectionCallback)
+        query.device.removeEventListener('advertisementreceived', query.device.GattAdvertismentCallback)
+        await query.device.gatt.disconnect();
+        console.log("Disconnected Device");
+      }
+      //state.commit("RESET_DEVLIST")
+      state.commit("BLE_DEVICE_REMOVED", query.device)
+    },
     async addDevice(state, query){
         var requestParameters = {};
 
@@ -143,7 +223,7 @@ const actions = {
         requestParameters.filters = [{ services: query.services }];
         }
 
-        let device = await navigator.bluetooth.requestDevice(requestParameters);
+        let device = await navigator.bluetooth.requestDevice(requestParameters).catch(error => { console.error(error); });
         if (device) {
         console.log(device.id.toString("hex"));
         console.log(device.gatt);
@@ -153,9 +233,12 @@ const actions = {
         }
     },
     async connectDevice({ dispatch, commit }, payload) {
-        console.log(dispatch);
+        //console.log(dispatch);
         if (!payload.device.gatt.connected) {
           await payload.device.gatt.connect();
+
+          //console.log()
+
           payload.device.GattDisconnectionCallback = event => {
             console.log(event);
             payload.device.removeEventListener(
@@ -177,14 +260,24 @@ const actions = {
         commit("BLE_DEVICE_UPDATED", payload.device);
       },
       async discoverServices({ dispatch, commit }, query) {
+        console.log(query);
         if (query.uuid) {
           const service = await query.device.gatt.getPrimaryService(query.uuid);
           if (!service) return;
+          console.log("primary service fired");
           dispatch("discoverCharacteristics", { service: service });
           commit("BLE_SERVICE_ADDED", service);
         } else {
           const services = await query.device.gatt.getPrimaryServices();
           for (const service of services) {
+            console.log(service);
+            if (service.uuid == "4fafc201-1fb5-459e-8fcc-c5c9c331914b"){
+              commit("BLE_VO2_ADD", query.device.id)
+            }
+            if (service.uuid == "0000180d-0000-1000-8000-00805f9b34fb"){  
+              //0000180d-0000-1000-8000-00805F9B34FB
+              commit("BLE_HR_ADD", query.device.id)
+            }
             dispatch("discoverCharacteristics", { service: service });
             commit("BLE_SERVICE_ADDED", service);
           }
@@ -248,6 +341,16 @@ const actions = {
                   //Temp / Pressure /Humidity
                   dispatch("addTempData", returnVar);
                   break;
+
+                  case "00002a37-0000-1000-8000-00805f9b34fb":
+                  dispatch("addHeartRate", returnVar[1]);
+                  //console.log(returnVar[1]);
+                  break;
+
+                  default:
+                  console.log(event.target.uuid)
+                  break;
+
               }
               if (event.target.uuid == "6e400003-b5a3-f393-e0a9-e50e24dcca9e")
               {
@@ -288,6 +391,15 @@ const getters = {
         getDevices: state => {
             return state.deviceList;
           },
+        getVO2Connected: state => {
+          return state.vo2Connected;
+        },
+        currentDevices: state => {
+          return state.devices;
+        },
+        getHRConnected: state => {
+          return state.hrConnected;
+        }
 };
 
 export default {

@@ -1,4 +1,21 @@
-<script setup>
+<script>
+import { mapGetters } from 'vuex'
+
+export default {
+  name: "App",
+  components: {},
+  data: function () {
+  return {
+  }
+  },
+  methods: {
+    
+  },
+    computed: {
+        ...mapGetters(["getVO2Connected"]),
+        ...mapGetters(["getHRConnected"])
+    }
+}
 </script>
 
 <template>
@@ -65,11 +82,28 @@
         </nav>
 
         <div class="flex items-center px-4 -mx-2">
-            <img class="object-cover mx-2 rounded-full h-9 w-9" src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=634&q=80" alt="avatar"/>
-            <h4 class="mx-2 font-medium text-gray-800 dark:text-gray-200 hover:underline">John Doe</h4>
+            <svg v-if="getVO2Connected == 0" class="object-cover mx-2 rounded-full h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M3.707 2.293a1 1 0 00-1.414 1.414l6.921 6.922c.05.062.105.118.168.167l6.91 6.911a1 1 0 001.415-1.414l-.675-.675a9.001 9.001 0 00-.668-11.982A1 1 0 1014.95 5.05a7.002 7.002 0 01.657 9.143l-1.435-1.435a5.002 5.002 0 00-.636-6.294A1 1 0 0012.12 7.88c.924.923 1.12 2.3.587 3.415l-1.992-1.992a.922.922 0 00-.018-.018l-6.99-6.991zM3.238 8.187a1 1 0 00-1.933-.516c-.8 3-.025 6.336 2.331 8.693a1 1 0 001.414-1.415 6.997 6.997 0 01-1.812-6.762zM7.4 11.5a1 1 0 10-1.73 1c.214.371.48.72.795 1.035a1 1 0 001.414-1.414c-.191-.191-.35-.4-.478-.622z" />
+ </svg>
+ <svg v-if="getVO2Connected > 0" class="object-cover mx-2 rounded-full h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M5.05 3.636a1 1 0 010 1.414 7 7 0 000 9.9 1 1 0 11-1.414 1.414 9 9 0 010-12.728 1 1 0 011.414 0zm9.9 0a1 1 0 011.414 0 9 9 0 010 12.728 1 1 0 11-1.414-1.414 7 7 0 000-9.9 1 1 0 010-1.414zM7.879 6.464a1 1 0 010 1.414 3 3 0 000 4.243 1 1 0 11-1.415 1.414 5 5 0 010-7.07 1 1 0 011.415 0zm4.242 0a1 1 0 011.415 0 5 5 0 010 7.072 1 1 0 01-1.415-1.415 3 3 0 000-4.242 1 1 0 010-1.415zM10 9a1 1 0 011 1v.01a1 1 0 11-2 0V10a1 1 0 011-1z" />
+ </svg>
+            <h4 class="mx-2 font-medium text-gray-800 dark:text-gray-200 hover:underline"></h4>
+        </div>
+        <div class="flex items-center px-4 -mx-2">
+            <svg v-if="getHRConnected == 0" class="object-cover mx-2 rounded-full h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+ </svg>
+ <svg v-if="getHRConnected > 0" class="object-cover mx-2 rounded-full h-9 w-9" fill="red" viewBox="0 0 24 24" stroke="red">
+                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+ </svg>
+ 
+            <h4 class="mx-2 font-medium text-gray-800 dark:text-gray-200 hover:underline"></h4>
         </div>
     </div>
 </div>
+
+
 <div class="flex">
     <router-view></router-view>
      </div>

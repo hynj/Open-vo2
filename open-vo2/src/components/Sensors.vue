@@ -158,7 +158,8 @@ export default {
     ...mapGetters(["vo2Data"]),
     ...mapGetters(["vco2Data"]),
     ...mapGetters(["rerData"]),
-    ...mapGetters(["flowFifteen"])
+    ...mapGetters(["flowFifteen"]),
+    ...mapGetters(["getHeartRate"])
   },
 }
 
@@ -218,7 +219,29 @@ export default {
  <b> X:</b>   
 </div>
 </div>
- 
+
+<div class="flex flex-row">
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>HR:</b> {{getHeartRate}}
+</div>
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>X: </b>{{vco2Data.toFixed(1)}}
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+  <b>X:</b> {{rerData.toFixed(1)}}
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+ <b> X 15: </b>{{flowFifteen.toFixed(2)}} 
+</div>
+
+<div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
+ <b> X:</b>   
+</div>
+</div>
+
 
  
      
