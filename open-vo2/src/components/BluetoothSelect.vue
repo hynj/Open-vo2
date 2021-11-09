@@ -10,7 +10,8 @@ export default {
       txService: "",
       txChar: "",
       showVO2: 0,
-      showHR: 0
+      showHR: 0,
+      IsHidden: 1
   }
   },
   methods: {
@@ -21,6 +22,7 @@ export default {
     processClickHR(clickNumber){
       console.log(clickNumber);
       this.showHR = clickNumber;
+      this.IsHidden = 0;
     },
     async startBlueVO2() {
       //anyDevices: true
@@ -64,13 +66,16 @@ export default {
 </script>
 
 <template>
-<div class="flex flex-col px-5 py-5 space-y-5">
-    <h1 class="text-3xl font-semibold text-gray-800 dark:text-white">
+<div class="flex flex-auto flex-col px-5 py-5 space-y-5">
+    <h1 class="underline text-4xl font-semibold text-gray-800 dark:text-white">
         Connection Manager
          </h1>
-         <p></p>
-    <h2 class="flex text-1xl font-semibold text-gray-800 dark:text-white"> Connect VO2 Sensor Array 
-      <div class="flex text-right px-32">
+         
+
+    <p class="font-semibold text-gray-800 dark:text-white">Begin by connecting the VO2 Sensor array.</p>
+    <p></p>
+  <h2 class="flex text-1xl font-semibold text-gray-800 dark:text-white"> Connect VO2 Sensor Array 
+      <div class="flex-grow text-right px-32">
         <button v-if="showVO2 == 0" class="text-white bg-blue-500 rounded-md" id="todrop" v-on:click="processClickVo2(1)">
           <svg xmlns="http://www.w3.org/2000/svg" class=" h-8 w-8 flex justify-self-end" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -93,13 +98,13 @@ export default {
 
 <ul id="example-1" class="spacing-y-30">
           <li
-            class="border list-none rounded-sm px-3 py-3"
+            class="flex justify-between border-2 border-gray-900 list-none rounded-sm px-3 py-3"
             v-for="device in getDevices"
             :key="device.deviceId"
           >
             {{ device.deviceName }} {{ device.deviceId }}
             <button
-              class=" lg:border-gray-400 rounded-b lg:rounded-b-none lg:rounded-r p-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              class="self-end text-right lg:border-gray-400 rounded-b lg:rounded-r p-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               v-on:click="setDevice(device.deviceId)"
             >
               Connect
@@ -107,8 +112,8 @@ export default {
           </li>
         </ul>
          </div>
-         <h2 class="flex text-1xl font-semibold text-gray-800 dark:text-white"> Connect HR Sensor
-      <div class="flex text-right px-32">
+         <h2 v-bind:class="{ 'opacity-50': IsHidden}" class=" flex text-1xl font-semibold text-gray-800 dark:text-white"> Connect HR Sensor
+      <div class="flex-grow text-right px-32">
         <button v-if="showHR == 0" class="text-white bg-blue-500 rounded-md" id="todrop" v-on:click="processClickHR(1)">
           <svg xmlns="http://www.w3.org/2000/svg" class=" h-8 w-8 flex justify-self-end" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -129,15 +134,16 @@ export default {
 </button>
 <br><br>
 
-<ul id="example-2" class="spacing-y-30">
+
+<ul id="example-2" class="flex spacing-y-30">
           <li
-            class="border list-none rounded-sm px-3 py-3"
+            class="flex justify-between border-2 border-gray-900 list-none rounded-sm px-3 py-3"
             v-for="device in getDevices"
             :key="device.deviceId"
           >
             {{ device.deviceName }} {{ device.deviceId }}
             <button
-              class=" lg:border-gray-400 rounded-b lg:rounded-b-none lg:rounded-r p-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              class="self-end text-right lg:border-gray-400 rounded-b lg:rounded-r p-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               v-on:click="setDevice(device.deviceId)"
             >
               Connect
@@ -147,15 +153,17 @@ export default {
          </div>
 
 <div>
-         <ul id="example-1" class="spacing-y-30">
+  
+<p class="text-2xl text-gray-800 dark:text-white">Connected Devices </p><p></p>
+         <ul id="example-3" class="spacing-y-30">
           <li
-            class="border list-none rounded-sm px-3 py-3"
+            class="flex my-2 justify-between text-base border-gray-900 text-gray-800 text-1 dark:text-white border-2 list-none rounded-sm px-3 py-3"
             v-for="device in currentDevices"
             :key="device.id"
           >
             {{ device.name }}
             <button
-              class=" lg:border-gray-400 rounded-b lg:rounded-b-none lg:rounded-r p-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              class="self-end text-right lg:border-gray-400 rounded-b lg:rounded-r p-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded"
               v-on:click="disconnectDevice(device)"
             >
               Disconnect

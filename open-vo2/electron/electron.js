@@ -1,7 +1,7 @@
 // electron/electron.js
 const path = require('path');
 const { ipcMain, app, BrowserWindow } = require('electron');
-
+const { default: installExtension, VUEJS3_DEVTOOLS } = require('electron-devtools-installer');
 const isDev = process.env.IS_DEV == "true" ? true : false;
 
 
@@ -70,6 +70,9 @@ ipcMain.on("channelForSelectingDevice", (event, DeviceId) => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  installExtension(VUEJS3_DEVTOOLS)
+        .then((name) => console.log(`Added Extension:  ${name}`))
+        .catch((err) => console.log('An error occurred: ', err));
   createWindow()
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

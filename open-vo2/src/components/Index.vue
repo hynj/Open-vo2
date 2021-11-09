@@ -17,7 +17,9 @@ export default {
 
 <template>
 
-<div class="flex px-5 py-5">
+<div class="flex flex-grow px-5 py-5">
+
+    
     <h2 class="text-3xl font-semibold text-gray-800 dark:text-white">
         Index
          </h2>
