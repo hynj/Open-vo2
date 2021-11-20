@@ -2,6 +2,7 @@
 //var NUS_TX_CHARACTERISTIC_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 //var NUS_RX_CHARACTERISTIC_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 
+
 //vo2 sensor primary service "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 
 //Modified from https://github.com/MonsieurDahlstrom/web-bluetooth-vuex
@@ -14,7 +15,9 @@ const state = {
     deviceList: [],
     vo2UUID: "",
     vo2Connected: 0,
-    hrConnected: 0
+    hrConnected: 0,
+    powerUUID: "",
+    powerConnected: 0
 };
 
 const mutations = {
@@ -35,6 +38,17 @@ const mutations = {
         state.vo2Connected = 1;
         console.log("vo2 Sensors connected");
         console.log(state.vo2UUID);
+      },
+      BLE_POWER_ADD(state, uuid) {
+        state.powerUUID = uuid;
+        state.powerConnected = 1;
+        console.log("Power Connected");
+        console.log(state.powerUUID);
+      },
+      BLE_POWER_REMOVE(state){
+        state.powerConnected = 0
+        state.powerUUID = ""
+        console.log("Power Disconnected");
       },
       BLE_HR_ADD(state){
         state.hrConnected = 1; 
@@ -116,6 +130,12 @@ const mutations = {
             state.hrConnected = 0;
             console.log("HR Disconnected")
           }
+          if (serviceToDelete.uuid == "00001818-0000-1000-8000-00805f9b34fb")
+          {
+            state.powerConnected = 0;
+            state.powerUUID = "";
+            console.log("Power Disconnected")
+          }
           const serviceIndex = state.services.indexOf(serviceToDelete);
           state.services.splice(serviceIndex, 1);
         }
@@ -153,6 +173,12 @@ const mutations = {
           {
             state.hrConnected = 0;
             console.log("HR Disconnected")
+          }
+          if (serviceToDelete.uuid == "00001818-0000-1000-8000-00805f9b34fb")
+          {
+            state.powerConnected = 0;
+            state.powerUUID = "";
+            console.log("Power Disconnected")
           }
           const serviceIndex = state.services.indexOf(serviceToDelete);
           state.services.splice(serviceIndex, 1);
@@ -278,6 +304,10 @@ const actions = {
               //0000180d-0000-1000-8000-00805F9B34FB
               commit("BLE_HR_ADD", query.device.id)
             }
+            if (service.uuid == "00001818-0000-1000-8000-00805f9b34fb"){  
+              //0000180d-0000-1000-8000-00805F9B34FB
+              commit("BLE_POWER_ADD", query.device.id)
+            }
             dispatch("discoverCharacteristics", { service: service });
             commit("BLE_SERVICE_ADDED", service);
           }
@@ -304,6 +334,19 @@ const actions = {
         }
         if (discoveredCharacteristics.length > 0)
           commit("BLE_CHARACTERISTICS_DISCOVERED", discoveredCharacteristics);
+      },
+      async writeCharacteristic({ commit }, query) {
+        console.log("triggered")
+        if (!query.characteristic || !query.value) return;
+        try {
+          await query.characteristic.writeValueWithResponse(query.value).then((response) => {
+            console.log(response)
+          });
+          commit("BLE_CHARACTERISTIC_CHANGED", query.characteristic);
+          console.log("Written to Characeterstic")
+        } catch (e) {
+          console.error(e)
+        }
       },
       async configureCharacteristic(
         { dispatch, commit },
@@ -347,8 +390,15 @@ const actions = {
                   //console.log(returnVar[1]);
                   break;
 
+                  case "00002a63-0000-1000-8000-00805f9b34fb":
+                  //Power is LE from byte 2 and 3
+                  let power = Buffer.from([returnVar[2], returnVar[3]]).readInt16LE(0)
+                  console.log(power)
+                  dispatch("addPowerData", power);
+                  break;
+
                   default:
-                  console.log(event.target.uuid)
+                  //console.log(event.target.uuid)
                   break;
 
               }
@@ -399,7 +449,29 @@ const getters = {
         },
         getHRConnected: state => {
           return state.hrConnected;
-        }
+        },
+        getPowerUUID: state => {
+          return state.powerUUID
+        },
+  characteristicsForService: (state ) => (service) => {
+    console.log(state.characteristics);
+    return state.characteristics.filter((characteristic) => characteristic.service.name === service.name)
+  },
+  characteristicForService: (state ) => (service, uuid) => {
+    return state.characteristics.find(
+      characteristic => 
+        characteristic.service.id === service.id && characteristic.uuid === uuid
+    );
+  },
+  servicesForDevice: (state) => (deviceID) => {
+    return state.services.filter((service) => {
+      console.log(deviceID);
+      return service.device.id === deviceID
+    })
+  },
+  serviceForDevice: (state) => (deviceID, uuid) => {
+    return state.services.find((service) => service.device.id === deviceID && service.uuid === uuid)
+  }
 };
 
 export default {

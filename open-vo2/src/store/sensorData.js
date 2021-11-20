@@ -28,6 +28,62 @@
 //B18: Flow 9
 //B19: Flow 10
 
+const cyclePeriodVo2 = 45
+
+
+function doVO2Calculations(state) {
+  //15 seconds of data recieved -> calculate vo2 / RER
+  console.log("15 sec update");
+  //Sum all Flow and multiply out to get volume in 15 seconds (ms averaged)
+  let fifteenSecFlowAverage = state.Flow.Flow300.reduce(function (previousValue, currentValue) {
+    return previousValue + currentValue
+  }, 0);
+
+  let fifteenSecO2 = state.Sensor.Oxygen.reduce(function (previousValue, currentValue) {
+    return previousValue + currentValue
+  }, 0) / state.Sensor.Oxygen.length;
+
+  let fifteenSecCO2 = state.Sensor.CO2.reduce(function (previousValue, currentValue) {
+    return previousValue + currentValue
+  }, 0) / state.Sensor.CO2.length;
+
+  //let fifteenVol = fifteenSecFlowAverage / 4
+  let fifteenVol = fifteenSecFlowAverage;
+  state.Flow.Flow15 = fifteenVol;
+
+  // To get VE with need to use haldane transformation (VE = FIN2 * VI / (1-(FE02 + FECo2)) )
+  // Nitrogen ammount stays the same in inspiration and expiration.
+  // We can calculate the ammount of nitrogen in expired air as we know the ammount of O2 and CO2
+  // Issues here: ox sensor consistently reads 20.5, throws out the equation
+  //var VE_corrected = (.79 * VI_corrected) / (1-((ox_percent/100)+(co2_percent/100)));
+
+  let volumeExp = 0.79 * fifteenVol / (1-((fifteenSecO2/100) + (fifteenSecCO2/100)))
+
+  if (fifteenSecO2 != 0 && fifteenSecCO2 != 0)
+  {
+    state.Calculated.VO2 = ((fifteenVol * 0.21) - (volumeExp * fifteenSecO2/100)) * 4
+    state.Calculated.VCO2 = ((volumeExp * fifteenSecCO2/100) - (fifteenVol * 0.0004)) * 4 
+    state.Calculated.RER = state.Calculated.VCO2 / state.Calculated.VO2
+  }
+  else
+  {
+    state.Calculated.VCO2 = 0
+    state.Calculated.VO2 = 0;
+    state.Calculated.RER = 0;
+    console.log("division by 0");
+  }
+
+  //Reset the data set
+  while (state.Sensor.Oxygen.length > 1) {
+    state.Sensor.Oxygen.shift()
+  }
+  while (state.Sensor.CO2.length > 1) {
+    state.Sensor.CO2.shift()
+  }
+  while (state.Flow.Flow300.length > 1) {
+    state.Flow.Flow300.shift()
+  }
+}
 const state = {
     Flow: {
       Instant: [],
@@ -39,6 +95,9 @@ const state = {
     HeartRate:{
       value: 0
     },
+    Power:{
+      value: 0
+    },
     Calculated: {
       VO2: 0,
       VCO2: 0,
@@ -46,7 +105,7 @@ const state = {
     },
     Sensor: {
       Oxygen: [20],
-      CO2: [],
+      CO2: [0],
       Humidity: [],
       Temperature: [],
       Pressure: [],
@@ -68,6 +127,10 @@ const state = {
       }
     ]
     },
+    timers: {
+      timeOld: 0,
+      direction: 0
+    },
     flowGraph: {
       series: [
         {
@@ -86,10 +149,69 @@ const mutations = {
   NEW_HEART_RATE(state, value){
     state.HeartRate.value = value;
   },
+  ADD_POWER(state, value) {
+    state.Power.value = value
+  },
   NEW_TEMP_DATA(state, newData){
     state.Sensor.Pressure.push(newData[0])
     state.Sensor.Temperature.push(newData[1])
     state.Sensor.Humidity.push(newData[2])
+  },
+  DIRECTION_FLIP(state)
+  {
+    console.log("Flip Direction")
+    if (state.timers.direction == 0) {state.timers.direction = 1} else { state.timers.direction = 0}
+  },
+  UPDATE_TIME(state)
+  {
+    state.timers.timeOld = Math.floor(Date.now() / 1000)
+  },
+  NEW_SENOR_DATA_DEBUG(state, direction){
+    let oldCo2 = parseFloat(state.Sensor.CO2[state.Sensor.CO2.length - 1])
+    let x = parseFloat(state.Sensor.Oxygen[state.Sensor.Oxygen.length - 1])
+
+    if (direction == 0){
+      if (x < 17 && x > 16){
+        state.Sensor.Oxygen.push(x + parseFloat(Math.random()/10))
+      } else if (x < 16 || x > 20){
+        state.Sensor.Oxygen.push(x + parseFloat(Math.random()/50))
+      }
+      else {
+        state.Sensor.Oxygen.push(x + parseFloat(Math.random()))
+      }
+
+      //Add CO2
+      if (oldCo2 < 4.5 && oldCo2 > 3){
+        state.Sensor.CO2.push(oldCo2 - parseFloat(Math.random()/10))
+      } else if (oldCo2 > 4.5 || oldCo2 <0){
+        state.Sensor.CO2.push(oldCo2 - parseFloat(Math.random()/50))
+      }
+      else {
+        state.Sensor.CO2.push(oldCo2 - parseFloat(Math.random()/2))
+      }
+
+    } else {
+      if (x < 17 && x >16){
+        state.Sensor.Oxygen.push(x - parseFloat(Math.random()/10))
+      } else if (x <16){
+        state.Sensor.Oxygen.push(x - parseFloat(Math.random()/50))
+      } else {
+        state.Sensor.Oxygen.push(x - parseFloat(Math.random()))
+      }
+
+      //Add CO2
+      if (oldCo2 < 4.5 && oldCo2 > 3){
+        state.Sensor.CO2.push(oldCo2 + parseFloat(Math.random()/10))
+      } else if (oldCo2 > 4.5){
+        state.Sensor.CO2.push(oldCo2 + parseFloat(Math.random()/50))
+      }
+      else {
+        state.Sensor.CO2.push(oldCo2 + parseFloat(Math.random()))
+      }
+    }
+    if (state.Sensor.Oxygen.length > cyclePeriodVo2 ){
+      doVO2Calculations(state)
+    }
   },
   NEW_SENSOR_DATA(state, newData) {
     state.Sensor.Oxygen.push(newData[0])
@@ -125,67 +247,19 @@ const mutations = {
       state.flowGraph.series[0].data.shift()
     }
 
-    if (state.Sensor.Oxygen.length > 45)
+    if (state.Sensor.Oxygen.length > cyclePeriodVo2)
     {
-      //15 seconds of data recieved -> calculate vo2 / RER
-      console.log("15 sec update");
-      //Sum all Flow and multiply out to get volume in 15 seconds (ms averaged)
-      let fifteenSecFlowAverage = state.Flow.Flow300.reduce(function (previousValue, currentValue) {
-        return previousValue + currentValue
-      }, 0);
-
-      let fifteenSecO2 = state.Sensor.Oxygen.reduce(function (previousValue, currentValue) {
-        return previousValue + currentValue
-      }, 0) / state.Sensor.Oxygen.length;
-
-      let fifteenSecCO2 = state.Sensor.CO2.reduce(function (previousValue, currentValue) {
-        return previousValue + currentValue
-      }, 0) / state.Sensor.CO2.length;
-
-      //let fifteenVol = fifteenSecFlowAverage / 4
-      let fifteenVol = fifteenSecFlowAverage;
-      state.Flow.Flow15 = fifteenVol;
-
-      // To get VE with need to use haldane transformation (VE = FIN2 * VI / (1-(FE02 + FECo2)) )
-      // Nitrogen ammount stays the same in inspiration and expiration.
-      // We can calculate the ammount of nitrogen in expired air as we know the ammount of O2 and CO2
-      // Issues here: ox sensor consistently reads 20.5, throws out the equation
-      //var VE_corrected = (.79 * VI_corrected) / (1-((ox_percent/100)+(co2_percent/100)));
-
-      let volumeExp = 0.79 * fifteenVol / (1-((fifteenSecO2/100) + (fifteenSecCO2/100)))
-
-      if (fifteenSecO2 != 0 && fifteenSecCO2 != 0)
-      {
-        state.Calculated.VO2 = ((fifteenVol * 0.21) - (volumeExp * fifteenSecO2/100)) * 4
-        state.Calculated.VCO2 = ((volumeExp * fifteenSecCO2/100) - (fifteenVol * 0.0004)) * 4 
-        state.Calculated.RER = state.Calculated.VCO2 / state.Calculated.VO2
-      }
-      else
-      {
-        state.Calculated.VCO2 = 0
-        state.Calculated.VO2 = 0;
-        state.Calculated.RER = 0;
-        console.log("division by 0");
-      }
-
-      //Reset the data set
-      while (state.Sensor.Oxygen.length > 0) {
-        state.Sensor.Oxygen.pop()
-      }
-      while (state.Sensor.CO2.length > 0) {
-        state.Sensor.CO2.pop()
-      }
-      while (state.Flow.Flow300.length > 0) {
-        state.Flow.Flow300.pop()
-      }
+      doVO2Calculations(state) 
     }
-
-
   }
 };
 const actions = {
   async updateOx({ commit }, characteristic) {
     commit("UPDATE_OXYGEN", characteristic);
+  },
+  async addDebugSensorData({ commit }, data){
+
+    commit("NEW_SENSOR_DATA", [o2Float, co2Float, flowOne, flowTwo, flowThree])
   },
   async addSensorData({ commit }, characteristic) {
     let o2Float = Buffer.from([ characteristic[3], characteristic[2], characteristic[1], characteristic[0] ]).readFloatBE(0)
@@ -205,6 +279,30 @@ const actions = {
   },
   async addHeartRate({commit}, value){
     commit("NEW_HEART_RATE", value);
+  },
+  async addPowerData({commit}, value){
+    commit("ADD_POWER", value);
+  },
+  startDebug({getters, commit}){
+    //Flip Time
+    let flipTime = 15
+    
+    if (getters.getDirection == 0)
+    {
+        console.log("D=0")
+      if (Math.floor(Date.now() / 1000) - getters.getTimeOld > flipTime) {
+        commit('UPDATE_TIME')
+        commit('DIRECTION_FLIP') }
+        commit('NEW_SENOR_DATA_DEBUG', 0)
+    }
+    else{
+      console.log("awd")
+
+      if (Math.floor(Date.now() / 1000) - getters.getTimeOld > flipTime) { 
+        commit('UPDATE_TIME')
+        commit('DIRECTION_FLIP') }
+        commit('NEW_SENOR_DATA_DEBUG', 1)
+    }
   }
 };
 const getters = {
@@ -244,6 +342,15 @@ const getters = {
   getHeartRate: state => {
     return state.HeartRate.value
   },
+  getDirection: state => {
+    return state.timers.direction
+  },
+  getTimeOld: state => {
+    return state.timers.timeOld
+  },
+  getPowerData: state => {
+    return state.Power.value
+  }
 };
 
 export default {
