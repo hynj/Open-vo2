@@ -17,7 +17,8 @@ const state = {
     vo2Connected: 0,
     hrConnected: 0,
     powerUUID: "",
-    powerConnected: 0
+    powerConnected: 0,
+    hasControlPower: 0
 };
 
 const mutations = {
@@ -53,6 +54,9 @@ const mutations = {
       BLE_HR_ADD(state){
         state.hrConnected = 1; 
         console.log("heart Rate Connected");
+      },
+      UPDATE_CONTROL_POWER(state, powerState){
+        state.hasControlPower = powerState
       },
       BLE_VO2_REMOVE(state) {
         state.vo2UUID = "";
@@ -134,6 +138,7 @@ const mutations = {
           {
             state.powerConnected = 0;
             state.powerUUID = "";
+            state.hasControlPower = 0;
             console.log("Power Disconnected")
           }
           const serviceIndex = state.services.indexOf(serviceToDelete);
@@ -178,6 +183,7 @@ const mutations = {
           {
             state.powerConnected = 0;
             state.powerUUID = "";
+            state.hasControlPower =0;
             console.log("Power Disconnected")
           }
           const serviceIndex = state.services.indexOf(serviceToDelete);
@@ -212,7 +218,7 @@ const mutations = {
     
         //state.deviceList.push(devList);
         //console.log("Device Pushed")
-      },
+      }
 };
 const actions = {
     resetDeviceList(state){
@@ -257,6 +263,33 @@ const actions = {
         state.commit("BLE_DEVICE_ADDED", device);
         return device;
         }
+    },
+    async sendPower({commit, dispatch, getters}, power){
+      let powerDeviceID = getters.getPowerUUID
+      let powerDeviceServices = getters.servicesForDevice(powerDeviceID);
+      let fitnessMachineControlPoint = getters.characteristicForService(powerDeviceServices, "00002ad9-0000-1000-8000-00805f9b34fb")
+
+      let sendArray = Uint8Array.of(0x00);
+      let options = { characteristic: fitnessMachineControlPoint, value: sendArray }
+
+      if (getters.gethasControlPower == 0){
+        try {
+          await dispatch('writeCharacteristic',options)
+          commit("UPDATE_CONTROL_POWER", 1);
+        }
+        catch (e){
+          console.log(e)
+        }
+      }
+
+      sendArray = Uint8Array.of(0x05, 0x00, 0x00);
+      sendArray[1]=power & 0xff;
+      sendArray[2]=(power >> 8);
+
+      options = { characteristic: fitnessMachineControlPoint, value: sendArray }
+      await dispatch('writeCharacteristic',options)
+
+      console.log("Sent Power")
     },
     async connectDevice({ dispatch, commit }, payload) {
         //console.log(dispatch);
@@ -450,8 +483,14 @@ const getters = {
         getHRConnected: state => {
           return state.hrConnected;
         },
+        getPowerConnected: state => {
+          return state.powerConnected
+        },
         getPowerUUID: state => {
           return state.powerUUID
+        },
+        gethasControlPower: state => {
+          return state.hasControlPower
         },
   characteristicsForService: (state ) => (service) => {
     console.log(state.characteristics);

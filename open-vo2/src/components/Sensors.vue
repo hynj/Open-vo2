@@ -12,63 +12,61 @@ export default {
       selectedDevice: "",
       txService: "",
       txChar: "",
-      optionsOne: {
-        chart: {
-          id: 'vuechart-example',
-          toolbar: {
-              show: false
-            },
-            animations: {
- enabled: TextTrackCue,
-        easing: 'linear',
-        speed: 1,
-        animateGradually: {
-            enabled: true,
-            delay: 150
-        },
-        dynamicAnimation: {
-            enabled: false,
-            speed: 350
-        }
-}
-        },
-        stroke: {
-    show: true,
-    curve: 'smooth',
-    lineCap: 'butt',
-    colors: undefined,
-    width: 1,
-    dashArray: 0,      
-},
-
-
-        xaxis: {
-          labels: {
+      CO2GraphOptions: {
+          chart: {
+              id: 'CO2-Chart',
+              toolbar: {
+                    show: false
+              },
+              animations: {
+                  enabled: TextTrackCue,
+                  easing: 'linear',
+                  speed: 1,
+                  animateGradually: {
+                      enabled: true,
+                      delay: 150
+                  },
+                  dynamicAnimation: {
+                      enabled: false,
+                      speed: 350
+                  }
+              }
+          },
+          stroke: {
+            show: true,
+            curve: 'smooth',
+            lineCap: 'butt',
+            colors: undefined,
+            width: 1,
+            dashArray: 0,      
+          },
+          xaxis: {
+            labels: {
             show: false,
             showAlways: false
+            },
+            axisTicks: {
+              show: false,
+              borderType: 'solid',
+              color: '#78909C',
+              width: 6,
+              offsetX: 0,
+              offsetY: 0
+            },
+            axisBorder: {
+              show: false,
+              color: '#78909C',
+              offsetX: 0,
+              offsetY: 0
+            },
           },
-          axisTicks: {
-            show: false,
-            borderType: 'solid',
-            color: '#78909C',
-            width: 6,
-            offsetX: 0,
-            offsetY: 0
-          },
-          axisBorder: {
-          show: false,
-          color: '#78909C',
-          offsetX: 0,
-          offsetY: 0
-      },
-        },
-        yaxis: {
-          min: 15,
-          max: 22,
-          labels: {
-            formatter: (value) => { return value.toFixed(0) }
+          yaxis: {
+            min: 0,
+            max: 6  ,
+            labels: {
+              formatter: (value) => { return value.toFixed(0) }
+            }
           }
-        }
       },
       options: {
         chart: {
@@ -182,7 +180,7 @@ export default {
   <b>O2:</b> {{oxData.toFixed(1)}}
 </div>
 <div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
-  <b>CO2: </b>{{co2Data}}
+  <b>CO2: </b>{{co2Data.toFixed(2)}}
 </div>
 
 <div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
@@ -212,7 +210,7 @@ export default {
 </div>
 
 <div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
- <b> Flow 15: </b>{{flowFifteen.toFixed(2)}} 
+ <b> Flow 15: </b>{{flowFifteen.toFixed(1)}} 
 </div>
 
 <div class="bg-green-300 border-green-600 border-b p-4 m-4 rounded w-36 h-12">
@@ -243,12 +241,13 @@ export default {
 </div>
 
 
- 
+ <div class="flex">
      
          <apexchart width="300" type="line" :options="options" :series="oxGraph"></apexchart>
-         <apexchart width="300" type="line" :options="optionsOne" :series="co2Graph"></apexchart>
- <button  class="px-4 py-2 w-32 font-medium tracking-wide text-white capitalize transition-colors duration-200 transform bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-80" v-on:click="updateChart"></button>
+         <apexchart width="300" type="line" :options="CO2GraphOptions" :series="co2Graph"></apexchart>
         
-
+</div>
+<button  class="px-4 py-2 w-32 font-medium tracking-wide text-white capitalize transition-colors duration-200 transform bg-indigo-600 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-80" v-on:click="updateChart"></button>
+ 
 </div>
 </template>

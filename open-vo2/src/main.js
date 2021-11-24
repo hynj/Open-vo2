@@ -16,6 +16,10 @@ ipcRenderer.on("channelForBluetoothDeviceList", (event, list) => {
   store.commit("addToDeviceList", list);
 });
 
+ipcRenderer.on("fileContents", (event, contents) => {
+  store.commit("LOAD_NEW_FILE", contents)
+});
+
 const routes = [
   {
       path: '/',

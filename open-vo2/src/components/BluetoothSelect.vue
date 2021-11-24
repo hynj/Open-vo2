@@ -18,15 +18,18 @@ export default {
   },
   methods: {
     processClickVo2(clickNumber){
+      this.$store.dispatch("resetDeviceList");
       console.log(clickNumber);
       this.showVO2 = clickNumber;
     },
     processClickHR(clickNumber){
+      this.$store.dispatch("resetDeviceList");
       console.log(clickNumber);
       this.showHR = clickNumber;
       this.IsHidden = 0;
     },
     processClickTrainer(clickNumber){
+      this.$store.dispatch("resetDeviceList");
       console.log(clickNumber);
       this.showTrainer = clickNumber;
       this.isHiddenTrainer = 0;
@@ -62,6 +65,10 @@ export default {
     },
     stopBlue() {
       ipcRenderer.send("channelForTerminationSignal");
+    },
+    async updatePower1(){
+      let powerToSend = 70
+      await this.$store.dispatch('sendPower', powerToSend)
     },
     async updatePower(){
       let powerDeviceID = this.$store.getters["getPowerUUID"]
@@ -193,7 +200,7 @@ export default {
 <br><br>
 
 
-<ul id="example-2" class="flex spacing-y-30">
+<ul id="example-2" class="spacing-y-30">
           <li
             class="flex justify-between border-2 border-gray-900 list-none rounded-sm px-3 py-3"
             v-for="device in getDevices"
@@ -212,21 +219,7 @@ export default {
 
 <div>
 
-<ul id="example-1" class="spacing-y-30">
-          <li
-            class="flex justify-between border-2 border-gray-900 list-none rounded-sm px-3 py-3"
-            v-for="device in getDevices"
-            :key="device.deviceId"
-          >
-            {{ device.deviceName }} {{ device.deviceId }}
-            <button
-              class="self-end text-right lg:border-gray-400 rounded-b lg:rounded-r p-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-              v-on:click="setDevice(device.deviceId)"
-            >
-              Connect
-            </button>
-          </li>
-        </ul>
+
 
          </div>
          <h2 v-bind:class="{ 'opacity-50': isHiddenTrainer}" class=" flex text-1xl font-semibold text-gray-800 dark:text-white"> Connect Trainer 
@@ -252,7 +245,7 @@ export default {
 <br><br>
 
 
-<ul id="example-2" class="flex spacing-y-30">
+<ul id="example-3" class="spacing-y-30">
           <li
             class="flex justify-between border-2 border-gray-900 list-none rounded-sm px-3 py-3"
             v-for="device in getDevices"
@@ -289,7 +282,7 @@ export default {
             </button>
           </li>
         </ul>
-        <button v-on:click="updatePower" class="px-4 py-2 w-32 font-medium tracking-wide text-white capitalize transition-colors duration-200 transform bg-blue-500 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-80">
+        <button v-on:click="updatePower1" class="px-4 py-2 w-32 font-medium tracking-wide text-white capitalize transition-colors duration-200 transform bg-blue-500 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-80">
     Update Power
 </button>
   </div>

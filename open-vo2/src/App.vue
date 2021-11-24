@@ -13,7 +13,8 @@ export default {
   },
     computed: {
         ...mapGetters(["getVO2Connected"]),
-        ...mapGetters(["getHRConnected"])
+        ...mapGetters(["getHRConnected"]),
+        ...mapGetters(["getPowerConnected"])
     }
 }
 </script>
@@ -97,6 +98,16 @@ export default {
  </svg>
  <svg v-if="getHRConnected > 0" class="object-cover mx-2 rounded-full h-9 w-9" fill="red" viewBox="0 0 24 24" stroke="red">
                 <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+ </svg>
+ 
+            <h4 class="mx-2 font-medium text-gray-800 dark:text-gray-200 hover:underline"></h4>
+        </div>
+        <div class="flex items-center px-4 -mx-2">
+            <svg v-if="getPowerConnected == 0" class="object-cover mx-2 rounded-full h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+ </svg>
+ <svg v-if="getPowerConnected > 0" class="object-cover mx-2 rounded-full h-9 w-9" fill="green" viewBox="0 0 24 24" stroke="green">
+                <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" />
  </svg>
  
             <h4 class="mx-2 font-medium text-gray-800 dark:text-gray-200 hover:underline"></h4>

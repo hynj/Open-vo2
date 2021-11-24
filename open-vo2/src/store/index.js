@@ -1,6 +1,7 @@
 import { createStore } from 'vuex'
 import BlueTooth from './bluetooth'
 import sensorData from './sensorData'
+import userData from './userData.js'
 
 export const store = createStore({
     state: {},
@@ -8,7 +9,8 @@ export const store = createStore({
     actions: {},
     modules: {
       BlueTooth,
-      sensorData
+      sensorData,
+      userData
     }
   });
 

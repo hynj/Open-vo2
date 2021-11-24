@@ -1,9 +1,9 @@
 // electron/electron.js
 const path = require('path');
-const { ipcMain, app, BrowserWindow } = require('electron');
+const { ipcMain, app, BrowserWindow, dialog } = require('electron');
 const { default: installExtension, VUEJS3_DEVTOOLS } = require('electron-devtools-installer');
 const isDev = process.env.IS_DEV == "true" ? true : false;
-
+const fs = require('fs');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -12,6 +12,48 @@ let win;
 
 // Global Callback
 let callbackForBluetoothEvent;
+
+const getFileFromUser = () => {
+  const files = dialog.showOpenDialog(win, {
+    properties: ['openFile']
+  }).then(result => {
+    console.log(result.canceled)
+    console.log(result.filePaths)
+
+    const content = JSON.parse(fs.readFileSync(result.filePaths[0]));
+
+    win.webContents.send(
+      "fileContents",
+      content
+    );
+
+    console.log(content);
+  });
+};
+
+const saveFile = (data) => {
+  let options = {
+    title: "Save VO File",
+    buttonLabel : "Save",
+    filters :[
+      {name: 'Custom File Type', extensions: ['vo']},
+     ]
+  }
+  console.log("test")
+  dialog.showSaveDialog(win, options).then(result => {
+    if (!result.canceled)
+    {
+      console.log(result.filePath)
+      fs.writeFile(result.filePath, data, (err) => {
+        if (err) throw err
+        console.log("file Saved")
+      })
+    }
+  }
+  ).catch((error) => {
+    console.log(error)
+  })
+};
 
 function createWindow() {
   // Create the browser window.
@@ -66,6 +108,16 @@ ipcMain.on("channelForSelectingDevice", (event, DeviceId) => {
   console.log("Device selected, discovery finished");
 });
 
+//Callback for Dialog box
+ipcMain.on("loadFile", (event, DeviceId) => {
+  getFileFromUser()
+  console.log("Device selected, discovery finished");
+});
+
+ipcMain.on("saveFile", (event, data) => {
+  saveFile(data)
+})
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -74,6 +126,7 @@ app.whenReady().then(() => {
         .then((name) => console.log(`Added Extension:  ${name}`))
         .catch((err) => console.log('An error occurred: ', err));
   createWindow()
+  
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.

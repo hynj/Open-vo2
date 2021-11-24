@@ -54,7 +54,10 @@ function doVO2Calculations(state) {
   // To get VE with need to use haldane transformation (VE = FIN2 * VI / (1-(FE02 + FECo2)) )
   // Nitrogen ammount stays the same in inspiration and expiration.
   // We can calculate the ammount of nitrogen in expired air as we know the ammount of O2 and CO2
-  // Issues here: ox sensor consistently reads 20.5, throws out the equation
+  // Issues here: ox sensor consistently reads 20.5, throws out the equation ? due to water vapour in air
+  // 2.64 kpa is satured vapour pressure of water at 22c
+  // Therefore at RH of 50% vapour pressure aprox 1.32
+  // So if o2 = 20.5 then 20.5*atmospheric pressure = o2 ppm. o2 atmos pressure + water vapour pressure / o2 ppm = true o2 conc?
   //var VE_corrected = (.79 * VI_corrected) / (1-((ox_percent/100)+(co2_percent/100)));
 
   let volumeExp = 0.79 * fifteenVol / (1-((fifteenSecO2/100) + (fifteenSecCO2/100)))
@@ -62,7 +65,7 @@ function doVO2Calculations(state) {
   if (fifteenSecO2 != 0 && fifteenSecCO2 != 0)
   {
     state.Calculated.VO2 = ((fifteenVol * 0.21) - (volumeExp * fifteenSecO2/100)) * 4
-    state.Calculated.VCO2 = ((volumeExp * fifteenSecCO2/100) - (fifteenVol * 0.0004)) * 4 
+    state.Calculated.VCO2 = ((volumeExp * fifteenSecCO2/100) - (fifteenVol * state.Calibration.CO2)) * 4 
     state.Calculated.RER = state.Calculated.VCO2 / state.Calculated.VO2
   }
   else
@@ -89,7 +92,7 @@ const state = {
       Instant: [],
       Flowminute: [],
       FlowTotal: [],
-      Flow300: [],
+      Flow300: [0],
       Flow15: 0,
     },
     HeartRate:{
@@ -102,6 +105,10 @@ const state = {
       VO2: 0,
       VCO2: 0,
       RER: 0
+    },
+    Calibration: {
+      Oxygen: 21,
+      CO2: 0.0004
     },
     Sensor: {
       Oxygen: [20],
@@ -118,6 +125,14 @@ const state = {
         data: []
       }
     ]
+    },
+    flowGraph: {
+      series: [
+        {
+          name: 'series-1',
+          data: []
+        }
+      ]
     },
     co2Graph: {
       series: [
@@ -166,7 +181,31 @@ const mutations = {
   {
     state.timers.timeOld = Math.floor(Date.now() / 1000)
   },
-  NEW_SENOR_DATA_DEBUG(state, direction){
+  NEW_SENSOR_FLOW_DEBUG(state, direction)
+  {
+    let oldFLow = parseFloat(state.Flow.Flow300[state.Flow.Flow300.length - 1])
+
+    if (direction == 0){
+      state.Flow.Flow300.push(oldFLow + parseFloat(Math.random()/4))
+      state.Flow.Flow300.push(oldFLow + parseFloat(Math.random()/4))
+      state.Flow.Flow300.push(oldFLow + parseFloat(Math.random()/4))
+    }
+    else{
+      let decrementFlow = oldFLow - parseFloat(Math.random())
+      if (decrementFlow > 0){
+        state.Flow.Flow300.push(decrementFlow)
+        state.Flow.Flow300.push(decrementFlow)
+        state.Flow.Flow300.push(decrementFlow)
+      }
+      else{
+        state.Flow.Flow300.push(0)
+        state.Flow.Flow300.push(0)
+        state.Flow.Flow300.push(0)
+      }
+      
+    }
+  },
+  NEW_SENSOR_DATA_DEBUG(state, direction){
     let oldCo2 = parseFloat(state.Sensor.CO2[state.Sensor.CO2.length - 1])
     let x = parseFloat(state.Sensor.Oxygen[state.Sensor.Oxygen.length - 1])
 
@@ -212,6 +251,15 @@ const mutations = {
     if (state.Sensor.Oxygen.length > cyclePeriodVo2 ){
       doVO2Calculations(state)
     }
+    state.o2Graph.series[0].data.push(state.Sensor.Oxygen[state.Sensor.Oxygen.length - 1]);
+    if (state.o2Graph.series[0].data.length > 50) {
+      state.o2Graph.series[0].data.shift()
+    }
+    
+    state.co2Graph.series[0].data.push(state.Sensor.CO2[state.Sensor.CO2.length - 1]);
+    if (state.co2Graph.series[0].data.length > 50) {
+      state.co2Graph.series[0].data.shift()
+    }
   },
   NEW_SENSOR_DATA(state, newData) {
     state.Sensor.Oxygen.push(newData[0])
@@ -224,6 +272,17 @@ const mutations = {
     state.Flow.Instant.push(newData[2]);
     state.Flow.Instant.push(newData[3]);
     state.Flow.Instant.push(newData[4]);
+
+    state.flowGraph.series[0].data.push(newData[2].toFixed(2));
+    state.flowGraph.series[0].data.push(newData[3].toFixed(2));
+    state.flowGraph.series[0].data.push(newData[4].toFixed(2));
+
+    if (state.flowGraph.series[0].data.length > 150) {
+      state.flowGraph.series[0].data.shift()
+      state.flowGraph.series[0].data.shift()
+      state.flowGraph.series[0].data.shift()
+    }
+    
 
     state.Flow.Flow300.push(newData[2] + newData[3] + newData[4])
 
@@ -251,6 +310,10 @@ const mutations = {
     {
       doVO2Calculations(state) 
     }
+  },
+  LOAD_NEW_FILE(state, contents){
+    console.log(contents)
+    console.log("Loading File")
   }
 };
 const actions = {
@@ -286,6 +349,7 @@ const actions = {
   startDebug({getters, commit}){
     //Flip Time
     let flipTime = 15
+    let respRate = 30
     
     if (getters.getDirection == 0)
     {
@@ -293,7 +357,8 @@ const actions = {
       if (Math.floor(Date.now() / 1000) - getters.getTimeOld > flipTime) {
         commit('UPDATE_TIME')
         commit('DIRECTION_FLIP') }
-        commit('NEW_SENOR_DATA_DEBUG', 0)
+        commit('NEW_SENSOR_DATA_DEBUG', 0)
+        commit('NEW_SENSOR_FLOW_DEBUG', 0)
     }
     else{
       console.log("awd")
@@ -301,7 +366,8 @@ const actions = {
       if (Math.floor(Date.now() / 1000) - getters.getTimeOld > flipTime) { 
         commit('UPDATE_TIME')
         commit('DIRECTION_FLIP') }
-        commit('NEW_SENOR_DATA_DEBUG', 1)
+        commit('NEW_SENSOR_DATA_DEBUG', 1)
+        commit('NEW_SENSOR_FLOW_DEBUG', 1)
     }
   }
 };
@@ -314,6 +380,9 @@ const getters = {
   },
   co2Graph: state => {
     return state.co2Graph.series
+  },
+  flowGraph: state => {
+    return state.flowGraph.series
   },
   co2Data: state => {
     return state.Sensor.CO2[state.Sensor.CO2.length - 1]
@@ -350,6 +419,9 @@ const getters = {
   },
   getPowerData: state => {
     return state.Power.value
+  },
+  getCalibrationData: state => {
+    return state.Calibration
   }
 };
 
