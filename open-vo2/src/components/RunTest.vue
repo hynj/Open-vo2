@@ -1,11 +1,15 @@
 <script>
 import { mapGetters } from 'vuex'
 const { ipcRenderer } = require('electron')
+
+import graphSettings from './graphSettings'
+
 export default {
   name: "RunTest",
   components: {},
   data: function () {
   return {
+      graphSettings,
       inSetup: 1,
       inTestSetup: 1,
       inCal: 1,
@@ -19,63 +23,7 @@ export default {
       direction: 0,
       cycleTime: 15,
       timeOld: 0,
-      flowCalChart: {
-          chart: {
-              id: 'flowCalChart',
-              toolbar: {
-                    show: false
-              },
-              animations: {
-                  enabled: TextTrackCue,
-                  easing: 'linear',
-                  speed: 1,
-                  animateGradually: {
-                      enabled: true,
-                      delay: 150
-                  },
-                  dynamicAnimation: {
-                      enabled: false,
-                      speed: 350
-                  }
-              }
-          },
-          stroke: {
-            show: true,
-            curve: 'smooth',
-            lineCap: 'butt',
-            colors: undefined,
-            width: 1,
-            dashArray: 0,      
-          },
-          xaxis: {
-            labels: {
-            show: false,
-            showAlways: false
-            },
-            axisTicks: {
-              show: false,
-              borderType: 'solid',
-              color: '#78909C',
-              width: 6,
-              offsetX: 0,
-              offsetY: 0
-            },
-            axisBorder: {
-              show: false,
-              color: '#78909C',
-              offsetX: 0,
-              offsetY: 0
-            },
-          },
-          yaxis: {
-            min: -10,
-            max: 10  ,
-            labels: {
-              formatter: (value) => { return value.toFixed(0) }
-            }
-          }
-      }
-  }
+    }
   },
   methods: {
       processClick(clickNumber){
@@ -264,7 +212,7 @@ export default {
  </div>
  </div>
 <div v-if="inCal == 0">
-      <apexchart width="800" height="200" type="line" :options="flowCalChart" :series="flowGraph"></apexchart>
+      <apexchart width="800" height="200" type="line" :options="graphSettings.flowCalChart" :series="flowGraph"></apexchart>
 </div>
      <button v-on:click="loadFile()">Load</button>
      <br>

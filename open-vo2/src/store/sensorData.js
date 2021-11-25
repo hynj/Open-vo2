@@ -76,6 +76,10 @@ function doVO2Calculations(state) {
     console.log("division by 0");
   }
 
+  state.VO2GraphData.series[0].data.push(state.Calculated.VO2)
+  state.VCO2GraphData.series[0].data.push(state.Calculated.VCO2)
+  state.RERGraphData.series[0].data.push(state.Calculated.RER)
+
   //Reset the data set
   while (state.Sensor.Oxygen.length > 1) {
     state.Sensor.Oxygen.shift()
@@ -149,10 +153,34 @@ const state = {
     flowGraph: {
       series: [
         {
-        name: 'flow',
-        data: []
-      }
-    ]
+          name: 'flow',
+          data: []
+        }
+      ]
+    },
+    VO2GraphData: {
+      series: [
+        {
+          name: 'VO2 Calculations',
+          data: []
+        }
+      ]
+    },
+    VCO2GraphData: {
+      series: [
+        {
+          name: 'VCO2 Calculations',
+          data: []
+        }
+      ]
+    },
+    RERGraphData: {
+      series: [
+        {
+          name: 'RER Calculations',
+          data: []
+        }
+      ]
     }
 };
 
@@ -422,8 +450,12 @@ const getters = {
   },
   getCalibrationData: state => {
     return state.Calibration
+  },
+  VO2CalcGraph: state => {
+    return state.VO2GraphData.series
   }
 };
+
 
 export default {
   state,
